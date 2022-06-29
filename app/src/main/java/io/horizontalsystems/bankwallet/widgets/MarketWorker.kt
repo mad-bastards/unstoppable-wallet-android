@@ -12,6 +12,10 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.work.*
+import coil.annotation.ExperimentalCoilApi
+import coil.imageLoader
+import coil.request.ErrorResult
+import coil.request.ImageRequest
 import io.horizontalsystems.bankwallet.R
 import io.horizontalsystems.bankwallet.core.App
 import io.horizontalsystems.bankwallet.modules.launcher.LauncherActivity
@@ -72,7 +76,14 @@ class MarketWorker(
                     setWidgetState(glanceId, state)
 
                     val marketData = MarketRepository.getMarketData()
+
                     state = state.copy(data = marketData, loading = false)
+                    setWidgetState(glanceId, state)
+
+                    var marketItems = MarketRepository.getMarketItems()
+                    marketItems = marketItems.map { it.copy(iconLocalPath = getImage(it.iconRemoteUrl)) }
+
+                    state = state.copy(items = marketItems)
                     setWidgetState(glanceId, state)
                 }
             }
@@ -93,6 +104,26 @@ class MarketWorker(
                 Result.failure()
             }
         }
+    }
+
+    @OptIn(ExperimentalCoilApi::class)
+    private suspend fun getImage(url: String): String? {
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .build()
+
+        with(context.imageLoader) {
+            val result = execute(request)
+            if (result is ErrorResult) {
+                return null
+            }
+        }
+
+        val localPath = context.imageLoader.diskCache?.get(url)?.use { snapshot ->
+            snapshot.data.toFile().path
+        }
+
+        return localPath
     }
 
     private suspend fun setWidgetState(glanceId: GlanceId, state: MarketWidgetState) {

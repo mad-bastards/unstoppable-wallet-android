@@ -1,25 +1,26 @@
 package io.horizontalsystems.bankwallet.widgets
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.glance.Button
-import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
+import androidx.compose.ui.unit.sp
+import androidx.glance.*
 import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.currentState
 import androidx.glance.layout.*
-import androidx.glance.text.Text
+import androidx.glance.layout.Alignment.Vertical.Companion.CenterVertically
+import androidx.glance.text.*
+import io.horizontalsystems.bankwallet.R
 
 class MarketWidget : GlanceAppWidget() {
 
@@ -39,30 +40,83 @@ class MarketWidget : GlanceAppWidget() {
     override fun Content() {
         val state = currentState<MarketWidgetState>()
 
+        val context = LocalContext.current
+
         Log.e("AAA", "Content() state = $state")
 
 //        ComposeAppTheme(darkTheme = true) {
-        AppWidgetColumn(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            Text(text = state.toString())
+        AppWidgetTheme {
+            Column(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .appWidgetBackgroundCornerRadius()
+                    .appWidgetBackground()
+                    .background(AppWidgetTheme.colors.lawrence)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
 
-            Button(
-                "Refresh",
-                actionRunCallback<UpdateMarketAction>(
-                    actionParametersOf(ActionParameters.Key<Int>("id") to 123)
+//                TextStyle(
+//                    fontWeight = FontWeight.Medium,
+//                    fontSize = 14.sp,
+//                    fontStyle = FontStyle.Italic,
+//                    letterSpacing = 0.sp,
+//                )
+                //Text(
+                //        text = text,
+                //        modifier = modifier,
+                //        textAlign = textAlign,
+                //        overflow = overflow,
+                //        maxLines = maxLines,
+                //        onTextLayout = onTextLayout,
+                //        style = ComposeAppTheme.typography.subhead1Italic,
+                //        color = ComposeAppTheme.colors.jacob,
+                //    )
+
+                Text(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    text = context.getString(R.string.Market_Tab_Watchlist),
+                    style = TextStyle(
+                        color = AppWidgetTheme.colors.grey,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        fontStyle = FontStyle.Normal,
+                        textAlign = TextAlign.Start
+                    )
                 )
-            )
+
+//                Text(text = state.toString())
+
+                state.items.forEach {
+                    Item(item = it)
+                }
 
 
-            Button(
-                "Refresh All",
-                actionRunCallback<RefreshAllAction>(
-                    actionParametersOf(ActionParameters.Key<Int>("id") to 123)
-                )
-            )
+//
+//                LazyColumn {
+//                    items(state.items, { it.title.hashCode().toLong() }) { item ->
+//                        Item(item)
+//                    }
+//                }
+
+
+//                Image(provider = ImageProvider(Uri.parse(imageUrl)), contentDescription = "test")
+
+                Spacer(modifier = GlanceModifier.height(32.dp))
+
+                Row {
+                    Button(
+                        "Refresh",
+                        actionRunCallback<UpdateMarketAction>()
+                    )
+
+                    Button(
+                        "Refresh All",
+                        actionRunCallback<RefreshAllAction>()
+                    )
+                }
 
 
 //            when (marketInfo) {
@@ -89,8 +143,111 @@ class MarketWidget : GlanceAppWidget() {
 //                    Log.e("AAA", it.coinUid)
 //                    Text(text = it.coinUid)
 //                }
-        }
+            }
 //        }
+        }
+    }
+
+    @Composable
+    fun Item(item: MarketItem) {
+
+        Box(
+            modifier = GlanceModifier
+                .height(60.dp)
+//                .clickable(),
+        ) {
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = CenterVertically
+            ) {
+                Image(
+                    provider = imageProvider(item.iconLocalPath),
+                    contentDescription = null,
+                    contentScale = ContentScale.FillBounds,
+                    modifier = GlanceModifier
+                        .size(24.dp)
+                )
+                Spacer(modifier = GlanceModifier.width(16.dp))
+                Column {
+                    MarketCoinFirstRow(coinName = item.title, rate = null)
+                    Spacer(modifier = GlanceModifier.height(3.dp))
+                    MarketCoinSecondRow(subtitle = item.subtitle, label = item.label)
+
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun MarketCoinFirstRow(coinName: String, rate: String?) {
+        Row(
+            verticalAlignment = CenterVertically
+        ) {
+
+            Text(
+                modifier = GlanceModifier.defaultWeight(),
+                text = coinName,
+                maxLines = 1,
+                style = TextStyle(AppWidgetTheme.colors.leah, fontSize = 16.sp)
+            )
+
+            rate?.let {
+                Text(
+                    modifier = GlanceModifier.defaultWeight(),
+                    text = rate,
+                    maxLines = 1,
+                    style = TextStyle(color = AppWidgetTheme.colors.leah, fontSize = 16.sp)
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun MarketCoinSecondRow(
+        subtitle: String,
+//        marketDataValue: MarketDataValue?,
+        label: String?
+    ) {
+        Row(
+            verticalAlignment = CenterVertically
+        ) {
+            label?.let {
+                Badge(text = it)
+                Spacer(modifier = GlanceModifier.width(8.dp))
+            }
+
+            Text(
+                text = subtitle,
+                maxLines = 1,
+                style = TextStyle(color = AppWidgetTheme.colors.grey, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+            )
+
+            Spacer(modifier = GlanceModifier.defaultWeight())
+//           marketDataValue?.let {
+//                androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
+//                MarketDataValueComponent(marketDataValue)
+//            }
+        }
+    }
+
+    @Composable
+    fun Badge(text: String) {
+        Text(
+            modifier = GlanceModifier
+                .cornerRadius(4.dp)
+                .background(AppWidgetTheme.colors.jeremy)
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            text = text,
+            style = TextStyle(color = AppWidgetTheme.colors.bran, fontSize = 10.sp, fontWeight = FontWeight.Medium),
+        )
+    }
+
+    private fun imageProvider(path: String?) = if (path == null) {
+        ImageProvider(R.drawable.coin_placeholder)
+    } else {
+        ImageProvider(BitmapFactory.decodeFile(path))
     }
 
 }
@@ -104,28 +261,33 @@ fun GlanceModifier.appWidgetBackgroundCornerRadius(): GlanceModifier {
     return this
 }
 
-@Composable
-fun AppWidgetColumn(
-    modifier: GlanceModifier = GlanceModifier,
-    verticalAlignment: Alignment.Vertical = Alignment.Top,
-    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column(
-        modifier = appWidgetBackgroundModifier().then(modifier),
-        verticalAlignment = verticalAlignment,
-        horizontalAlignment = horizontalAlignment,
-        content = content,
-    )
-}
+//@Composable
+//fun AppWidgetColumn(
+//    modifier: GlanceModifier = GlanceModifier,
+//    verticalAlignment: Alignment.Vertical = Alignment.Top,
+//    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+//    content: @Composable ColumnScope.() -> Unit
+//) {
+//    Column(
+//        modifier = appWidgetBackgroundModifier().then(modifier),
+//        verticalAlignment = verticalAlignment,
+//        horizontalAlignment = horizontalAlignment,
+//        content = content,
+//    )
+//}
 
-@Composable
-fun appWidgetBackgroundModifier() = GlanceModifier
-    .fillMaxSize()
-    .padding(16.dp)
+//@Composable
+//fun appWidgetBackgroundModifier() = GlanceModifier
+//    .fillMaxSize()
+//    .appWidgetBackgroundCornerRadius()
+//    .appWidgetBackground()
+//    .background(color = MaterialTheme.colors.background)
+//    .padding(8.dp)
+//    .fillMaxSize()
+//    .padding(16.dp)
 //    .appWidgetBackground()
 //    .background(ComposeAppTheme.colors.lawrence)//?? colors should be moved to another theme class for glance
-    .appWidgetBackgroundCornerRadius()
+//    .appWidgetBackgroundCornerRadius()
 
 
 class RefreshAllAction : ActionCallback {
@@ -144,31 +306,6 @@ class UpdateMarketAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-
-        // MarketWidget().update(context, glanceId)
-
-//        Log.e("AAA", "actionParams:")
-
-//        parameters.asMap().forEach { (t, u) ->
-//            Log.e("AAA", " $t -> $u")
-//        }
-//        Log.e("AAA", "update action, Thread: ${Thread.currentThread().name}, glanceId: ${glanceId.hashCode()}")
-        // Force the worker to refresh
-
-//        val state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
-//
-//        val intent = Intent(context, MarketWidgetReceiver::class.java)
-//
-//        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(glanceId.hashCode()))
-//        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-//
-//        context.sendBroadcast(intent)
-
-//        MarketWidget().update(context, glanceId)
-
-//        val request = OneTimeWorkRequestBuilder<MarketWorker>().build()
-//        WorkManager.getInstance(context).enqueue(request)
-
         updateAppWidgetState(context, MarketWidgetStateDefinition, glanceId) { state ->
             Log.e("AAA", "updateAction, prev state = $state")
             state.copy(needToRefresh = true)
