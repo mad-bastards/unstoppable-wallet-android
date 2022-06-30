@@ -41,7 +41,12 @@ class MarketWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
 
-        Log.e("AAA", "receiver: onDeleted")
+        Log.e("AAA", "receiver: onDeleted, appWidgetIds: ${appWidgetIds.joinToString(separator = ", ")}")
+
+        appWidgetIds.forEach {
+            MarketWorker.cancel(context, it)
+        }
+
     }
 
     override fun onRestored(context: Context?, oldWidgetIds: IntArray?, newWidgetIds: IntArray?) {
@@ -53,7 +58,6 @@ class MarketWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
 
-//        MarketWidget().update(context,  appWidgetIds.first())
         Log.e("AAA", "receiver: onUpdate, appWidgetIds: ${appWidgetIds.joinToString(separator = ", ")}")
     }
 }

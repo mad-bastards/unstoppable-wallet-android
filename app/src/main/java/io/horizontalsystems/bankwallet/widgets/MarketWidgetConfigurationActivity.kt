@@ -12,7 +12,6 @@ import androidx.compose.material.TextButton
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.appwidget.updateIf
 import io.horizontalsystems.core.CoreActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -48,20 +47,20 @@ class MarketWidgetConfigurationActivity : CoreActivity() {
 
         coroutineScope.launch {
             val manager = GlanceAppWidgetManager(context)
-            manager.getGlanceIds(MarketWidget::class.java).forEach { glanceId ->
+            for (glanceId in manager.getGlanceIds(MarketWidget::class.java)) {
                 val state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
 
-                Log.e("AAA", "state.id = ${state.id}")
+                Log.e("AAA", "state.widgetId = ${state.widgetId}")
 
-                if (state.id == 0 || state.id == appWidgetId) { // initial configuring or reconfiguring
+                if (state.widgetId == 0 || state.widgetId == appWidgetId) { // initial configuring or reconfiguring
                     updateAppWidgetState(context, MarketWidgetStateDefinition, glanceId) {
-                        MarketWidgetState(id = appWidgetId, needToRefresh = true, loading = true)
+                        it.copy(widgetId = appWidgetId)
                     }
+//                    MarketWidget().update(context, glanceId) // needed or not?
+                    MarketWorker.enqueue(context = context, widgetId = appWidgetId)
+
+                    break
                 }
-
-                MarketWidget().updateIf<MarketWidgetState>(context) { state.needToRefresh }
-
-                MarketWorker.enqueue(context)
             }
         }
 

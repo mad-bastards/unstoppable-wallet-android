@@ -25,13 +25,24 @@ object MarketRepository {
                 "2",
                 "https://markets.nyc3.digitaloceanspaces.com/coin-icons/ethereum@3x.png"
             ),
-
-            MarketItem(
-                "Binance Coin",
-                "BNB",
-                "5",
-                "https://markets.nyc3.digitaloceanspaces.com/coin-icons/binancecoin@3x.png"
-            ),
+//            MarketItem(
+//                "Binance Coin",
+//                "BNB",
+//                "5",
+//                "https://markets.nyc3.digitaloceanspaces.com/coin-icons/binancecoin@3x.png"
+//            ),
+//            MarketItem(
+//                "Solana",
+//                "SOL",
+//                "9",
+//                "https://markets.nyc3.digitaloceanspaces.com/coin-icons/solana@3x.png"
+//            ),
+//            MarketItem(
+//                "Tether",
+//                "USDT",
+//                "3",
+//                "https://markets.nyc3.digitaloceanspaces.com/coin-icons/tether@3x.png"
+//            ),
         )
     }
 

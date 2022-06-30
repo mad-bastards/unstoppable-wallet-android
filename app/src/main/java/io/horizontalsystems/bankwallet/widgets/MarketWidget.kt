@@ -10,13 +10,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.ActionParameters
-import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.*
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.appWidgetBackground
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.layout.*
 import androidx.glance.layout.Alignment.Vertical.Companion.CenterVertically
 import androidx.glance.text.*
@@ -163,7 +160,7 @@ class MarketWidget : GlanceAppWidget() {
                 verticalAlignment = CenterVertically
             ) {
                 Image(
-                    provider = imageProvider(item.iconLocalPath),
+                    provider = imageProvider(item.imageLocalPath),
                     contentDescription = null,
                     contentScale = ContentScale.FillBounds,
                     modifier = GlanceModifier
@@ -296,7 +293,10 @@ class RefreshAllAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        MarketWorker.enqueue(context = context, refreshAll = true)
+        GlanceAppWidgetManager(context).getGlanceIds(MarketWidget::class.java).forEach {
+            val state = getAppWidgetState(context, MarketWidgetStateDefinition, it)
+            MarketWorker.enqueue(context = context, widgetId = state.widgetId)
+        }
     }
 }
 
@@ -306,11 +306,7 @@ class UpdateMarketAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        updateAppWidgetState(context, MarketWidgetStateDefinition, glanceId) { state ->
-            Log.e("AAA", "updateAction, prev state = $state")
-            state.copy(needToRefresh = true)
-        }
-
-        MarketWorker.enqueue(context = context)
+        val state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
+        MarketWorker.enqueue(context = context, widgetId = state.widgetId)
     }
 }
