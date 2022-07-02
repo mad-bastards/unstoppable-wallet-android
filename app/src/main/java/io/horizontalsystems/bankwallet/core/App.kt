@@ -40,6 +40,7 @@ import io.horizontalsystems.bankwallet.modules.walletconnect.version1.WC1Session
 import io.horizontalsystems.bankwallet.modules.walletconnect.version2.WC2Manager
 import io.horizontalsystems.bankwallet.modules.walletconnect.version2.WC2Service
 import io.horizontalsystems.bankwallet.modules.walletconnect.version2.WC2SessionManager
+import io.horizontalsystems.bankwallet.widgets.MarketWidgetManager
 import io.horizontalsystems.core.BackgroundManager
 import io.horizontalsystems.core.CoreApp
 import io.horizontalsystems.core.ICoreApp
@@ -110,6 +111,7 @@ class App : CoreApp(), WorkConfiguration.Provider, ImageLoaderFactory {
         lateinit var evmLabelManager: EvmLabelManager
         lateinit var baseCoinManager: BaseCoinManager
         lateinit var balanceViewTypeManager: BalanceViewTypeManager
+        lateinit var marketWidgetManager: MarketWidgetManager
     }
 
     override val testMode = BuildConfig.testMode
@@ -271,7 +273,8 @@ class App : CoreApp(), WorkConfiguration.Provider, ImageLoaderFactory {
 
         termsManager = TermsManager(localStorage)
 
-        marketFavoritesManager = MarketFavoritesManager(appDatabase)
+        marketWidgetManager = MarketWidgetManager()
+        marketFavoritesManager = MarketFavoritesManager(appDatabase, marketWidgetManager)
 
         releaseNotesManager = ReleaseNotesManager(systemInfoManager, localStorage, appConfigProvider)
 

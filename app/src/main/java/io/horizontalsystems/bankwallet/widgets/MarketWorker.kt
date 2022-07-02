@@ -17,9 +17,7 @@ import coil.imageLoader
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import io.horizontalsystems.bankwallet.R
-import io.horizontalsystems.bankwallet.core.App
 import io.horizontalsystems.bankwallet.modules.launcher.LauncherActivity
-import kotlinx.coroutines.delay
 import java.time.Duration
 
 
@@ -60,8 +58,6 @@ class MarketWorker(
     }
 
     override suspend fun doWork(): Result {
-        val rate = App.marketKit.coinPrice("bitcoin", "USD")
-
         val manager = GlanceAppWidgetManager(context)
         val glanceIds = manager.getGlanceIds(MarketWidget::class.java)
         val currentTimestampMillis = System.currentTimeMillis()
@@ -121,7 +117,6 @@ class MarketWorker(
 
     @OptIn(ExperimentalCoilApi::class)
     private suspend fun getImage(url: String): String? {
-        delay(2000)
         Log.e("AAA", "getImage: $url")
 
         val request = ImageRequest.Builder(context)

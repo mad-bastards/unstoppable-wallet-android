@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import io.horizontalsystems.bankwallet.core.App
 
 class MarketWidgetReceiver : GlanceAppWidgetReceiver() {
 
@@ -16,14 +17,14 @@ class MarketWidgetReceiver : GlanceAppWidgetReceiver() {
         super.onEnabled(context)
 
         Log.e("AAA", "receiver: onEnabled")
-        // MarketWorker.enqueue(context)
+        App.marketWidgetManager.start()
     }
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
 
         Log.e("AAA", "receiver: onDisabled")
-        // MarketWorker.cancel(context)
+        App.marketWidgetManager.stop()
     }
 
     override fun onReceive(context: Context, intent: Intent) {

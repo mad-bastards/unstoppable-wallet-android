@@ -5,7 +5,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.unit.ColorProvider
+import androidx.glance.text.FontWeight
+import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import io.horizontalsystems.bankwallet.ui.compose.*
 
@@ -14,8 +17,24 @@ object AppWidgetTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalColorProviders.current
+
+    val textStyles: TextStyles = TextStyles()
+
 }
 
+class TextStyles {
+    val c3: TextStyle
+        @Composable
+        get() = TextStyle(color = AppWidgetTheme.colors.jacob, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+
+    val d1: TextStyle
+        @Composable
+        get() = TextStyle(color = AppWidgetTheme.colors.grey, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+
+    val d3: TextStyle
+        @Composable
+        get() = TextStyle(color = AppWidgetTheme.colors.jacob, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+}
 
 @Composable
 fun AppWidgetTheme(colors: ColorProviders = AppWidgetTheme.colors, content: @Composable () -> Unit) {
