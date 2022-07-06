@@ -1,14 +1,13 @@
 package io.horizontalsystems.bankwallet.widgets
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStoreFile
 import androidx.glance.state.GlanceStateDefinition
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import java.io.File
 import java.io.InputStream
@@ -30,22 +29,23 @@ object MarketWidgetStateDefinition : GlanceStateDefinition<MarketWidgetState> {
     }
 
     object MarketWidgetStateSerializer : Serializer<MarketWidgetState> {
-        private val gson by lazy { Gson() }
+        private val gson by lazy {
+            GsonBuilder()
+                .setLenient()
+                .registerTypeAdapter(MarketWidgetType::class.java, MarketWidgetTypeAdapter())
+                .create()
+        }
 
         override val defaultValue = MarketWidgetState()
 
         override suspend fun readFrom(input: InputStream): MarketWidgetState = try {
             val jsonString = input.readBytes().decodeToString()
-            Log.e("AAA", "MarketWidgetStateSerializer: readFrom, jsonString: $jsonString")
-
             gson.fromJson(jsonString, MarketWidgetState::class.java)
         } catch (exception: JsonSyntaxException) {
             throw CorruptionException("Could not read data: ${exception.message}")
         }
 
         override suspend fun writeTo(t: MarketWidgetState, output: OutputStream) {
-            Log.e("AAA", "MarketWidgetStateSerializer: writeTo, state: $t, serialized: ${gson.toJson(t)} ")
-
             output.use {
                 it.write(
                     gson.toJson(t).encodeToByteArray()

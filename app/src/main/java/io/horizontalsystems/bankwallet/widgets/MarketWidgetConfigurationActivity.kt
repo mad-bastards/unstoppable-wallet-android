@@ -2,18 +2,36 @@ package io.horizontalsystems.bankwallet.widgets
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
+import io.horizontalsystems.bankwallet.R
+import io.horizontalsystems.bankwallet.ui.compose.ComposeAppTheme
+import io.horizontalsystems.bankwallet.ui.compose.TranslatableString
+import io.horizontalsystems.bankwallet.ui.compose.components.AppBar
+import io.horizontalsystems.bankwallet.ui.compose.components.CellSingleLineLawrenceSection
+import io.horizontalsystems.bankwallet.ui.compose.components.MenuItem
+import io.horizontalsystems.bankwallet.ui.compose.components.body_leah
 import io.horizontalsystems.core.CoreActivity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -22,51 +40,85 @@ class MarketWidgetConfigurationActivity : CoreActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent {
-            Column {
-                Text(text = "Select Coin")
-
-                TextButton(onClick = {
-                    finishActivity()
-                }) {
-                    Text(text = "Set BTC")
-                }
-            }
-        }
-    }
-
-    private fun finishActivity() {
         val appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
-        Log.e("AAA", "configured widget: $appWidgetId")
-        val coroutineScope: CoroutineScope = MainScope()
         val context = applicationContext
 
-        coroutineScope.launch {
-            val manager = GlanceAppWidgetManager(context)
-            for (glanceId in manager.getGlanceIds(MarketWidget::class.java)) {
-                val state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
+        setContent {
+            var selectedType by remember { mutableStateOf(MarketWidgetType.Watchlist) }
+            var currentGlanceId by remember { mutableStateOf<GlanceId?>(null) }
 
-                Log.e("AAA", "state.widgetId = ${state.widgetId}")
-
-                if (state.widgetId == 0 || state.widgetId == appWidgetId) { // initial configuring or reconfiguring
-                    updateAppWidgetState(context, MarketWidgetStateDefinition, glanceId) {
-                        it.copy(widgetId = appWidgetId)
+            LaunchedEffect(Unit) {
+                val manager = GlanceAppWidgetManager(context)
+                for (glanceId in manager.getGlanceIds(MarketWidget::class.java)) {
+                    val state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
+                    if (state.widgetId == 0 || state.widgetId == appWidgetId) {
+                        selectedType = state.type
+                        currentGlanceId = glanceId
+                        break
                     }
-//                    MarketWidget().update(context, glanceId) // needed or not?
-                    MarketWorker.enqueue(context = context, widgetId = appWidgetId)
+                }
+            }
 
-                    break
+            ComposeAppTheme {
+                Column(modifier = Modifier.background(color = ComposeAppTheme.colors.tyler)) {
+                    AppBar(
+                        title = TranslatableString.ResString(R.string.WidgetList_Config_Title),
+                        navigationIcon = null,
+                        menuItems = listOf(MenuItem(
+                            title = TranslatableString.ResString(R.string.Button_Close),
+                            icon = R.drawable.ic_close,
+                            onClick = { finishActivity(selectedType, appWidgetId, currentGlanceId, context) }
+                        ))
+                    )
+
+                    CellSingleLineLawrenceSection(MarketWidgetType.values().toList()) { type ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(onClick = {
+                                    selectedType = type
+                                    finishActivity(selectedType, appWidgetId, currentGlanceId, context)
+                                })
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            body_leah(
+                                text = stringResource(type.title),
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (selectedType == type) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_checkmark_20),
+                                    contentDescription = null,
+                                    colorFilter = ColorFilter.tint(ComposeAppTheme.colors.jacob)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
 
-        val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-        setResult(Activity.RESULT_OK, resultValue)
-        finish()
+    private fun finishActivity(selectedType: MarketWidgetType, appWidgetId: Int, glanceId: GlanceId?, context: Context) {
+        val scope = MainScope()
+        scope.launch {
+            glanceId?.let {
+                updateAppWidgetState(context, MarketWidgetStateDefinition, glanceId) {
+                    it.copy(widgetId = appWidgetId, type = selectedType)
+                }
+            }
+
+            MarketWorker.enqueue(context = context, widgetId = appWidgetId)
+
+            val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            setResult(Activity.RESULT_OK, resultValue)
+            finish()
+        }
     }
 
 }

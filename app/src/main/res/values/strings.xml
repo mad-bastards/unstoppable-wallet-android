@@ -1218,5 +1218,10 @@
     <!--Widget-->
 
     <string name="Widget_Description">Description</string>
+    <string name="WidgetList_Config_Title">Choose Type</string>
+    <string name="WidgetList_Type_Watchlist">Watchlist</string>
+    <string name="WidgetList_Type_TopGainers">Top Gainers</string>
+    <string name="WidgetList_Type_TopNfts">Top NFT Collections</string>
+    <string name="WidgetList_Type_TopPlatforms">Top Platforms</string>
 
 </resources>

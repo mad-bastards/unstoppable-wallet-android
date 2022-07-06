@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -19,7 +18,6 @@ import coil.request.ImageRequest
 import io.horizontalsystems.bankwallet.R
 import io.horizontalsystems.bankwallet.modules.launcher.LauncherActivity
 import java.time.Duration
-
 
 class MarketWorker(
     private val context: Context,
@@ -35,8 +33,6 @@ class MarketWorker(
         private fun uniqueWorkName(widgetId: Int) = "${MarketWorker::class.java.simpleName}_${widgetId}"
 
         fun enqueue(context: Context, widgetId: Int) {
-            Log.e("AAA", "worker #${widgetId} enqueue()")
-
             val manager = WorkManager.getInstance(context)
             val requestBuilder = PeriodicWorkRequestBuilder<MarketWorker>(Duration.ofMillis(updatePeriodMillis))
 
@@ -51,8 +47,6 @@ class MarketWorker(
         }
 
         fun cancel(context: Context, widgetId: Int) {
-            Log.e("AAA", "worker #$widgetId cancel()")
-
             WorkManager.getInstance(context).cancelUniqueWork(uniqueWorkName(widgetId))
         }
     }
@@ -61,17 +55,14 @@ class MarketWorker(
         val manager = GlanceAppWidgetManager(context)
         val glanceIds = manager.getGlanceIds(MarketWidget::class.java)
         val currentTimestampMillis = System.currentTimeMillis()
-
         val widgetId = inputData.getInt(inputDataKeyWidgetId, 0)
-
-        Log.e("AAA", "worker #$widgetId doWork(), currentTimestamp seconds = ${currentTimestampMillis / 1000}")
 
         return try {
             for (glanceId in glanceIds) {
                 var state = getAppWidgetState(context, MarketWidgetStateDefinition, glanceId)
                 if (state.widgetId != widgetId) continue
 
-                state = state.copy(loading = true, updateTimestampMillis = currentTimestampMillis)
+                state = state.copy(loading = true, error = null)
                 setWidgetState(glanceId, state)
 
                 val imagePathCache = buildMap {
@@ -86,12 +77,10 @@ class MarketWorker(
                 setWidgetState(glanceId, state)
 
                 marketItems = marketItems.map { item ->
-                    Log.e("AAA", if (item.imageLocalPath != null) "icon EXISTS" else "NO ICON")
-
                     item.copy(imageLocalPath = item.imageLocalPath ?: getImage(item.imageRemoteUrl))
                 }
 
-                state = state.copy(items = marketItems)
+                state = state.copy(items = marketItems, updateTimestampMillis = currentTimestampMillis)
                 setWidgetState(glanceId, state)
 
                 break
@@ -117,8 +106,6 @@ class MarketWorker(
 
     @OptIn(ExperimentalCoilApi::class)
     private suspend fun getImage(url: String): String? {
-        Log.e("AAA", "getImage: $url")
-
         val request = ImageRequest.Builder(context)
             .data(url)
             .build()
@@ -168,7 +155,6 @@ class MarketWorker(
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setContentTitle(context.getString(R.string.app_name))
             .setLocalOnly(true)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setContentText("Updating widget")

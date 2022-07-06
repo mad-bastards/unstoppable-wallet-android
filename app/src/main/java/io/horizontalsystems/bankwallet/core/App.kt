@@ -119,8 +119,6 @@ class App : CoreApp(), WorkConfiguration.Provider, ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
-        Log.e("AAA", "App.onCreate()")
-
         if (!BuildConfig.DEBUG) {
             //Disable logging for lower levels in Release build
             Logger.getLogger("").level = Level.SEVERE
