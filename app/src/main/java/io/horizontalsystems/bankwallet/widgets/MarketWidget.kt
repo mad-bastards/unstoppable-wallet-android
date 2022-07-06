@@ -8,8 +8,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
@@ -25,7 +23,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import io.horizontalsystems.bankwallet.R
 import io.horizontalsystems.bankwallet.core.App
-import io.horizontalsystems.bankwallet.modules.launcher.LauncherActivity
 import io.horizontalsystems.bankwallet.modules.market.Value
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
@@ -61,6 +58,7 @@ class MarketWidget : GlanceAppWidget() {
             ) {
                 Column(
                     modifier = GlanceModifier
+                        .defaultWeight()
                         .background(ImageProvider(R.drawable.widget_list_background))
                 ) {
                     Row(
@@ -68,7 +66,7 @@ class MarketWidget : GlanceAppWidget() {
                             .height(44.dp)
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        verticalAlignment = CenterVertically
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             modifier = GlanceModifier.defaultWeight(),
@@ -112,41 +110,40 @@ class MarketWidget : GlanceAppWidget() {
                             modifier = GlanceModifier
                                 .height(60.dp)
                                 .background(ImageProvider(R.drawable.widget_list_item_background))
-                                .clickable(
-                                    actionStartActivity<LauncherActivity>(
-                                        parameters = actionParametersOf(
-
-                                        )
+                            /*.clickable(
+                                actionStartActivity<LauncherActivity>(
+                                    parameters = actionParametersOf()
+                                )
+                                actionRunCallback<OpenCoinPageAction>(
+                                    actionParametersOf(
+                                        ActionParameters.Key<String>("coinUid") to it.uid
                                     )
-                                    /*actionRunCallback<OpenCoinPageAction>(
-                                        actionParametersOf(
-                                            ActionParameters.Key<String>("coinUid") to it.uid
-                                        )
-                                    )*/
-                                ),
+                                )
+                            )*/
                         ) {
                             Item(item = it)
                         }
                     }
+                    if (!state.loading && state.items.isEmpty()) {
+                        FullScreenMessage(
+                            icon = R.drawable.ic_rate_24,
+                            text = context.getString(R.string.Market_Tab_Watchlist_EmptyList),
+                        )
+                    }
                 }
-
-                Spacer(modifier = GlanceModifier.height(32.dp))
-                Text(
-                    text = SimpleDateFormat("HH:mm:ss, dd-MM-yyyy", Locale.US).format(Date(state.updateTimestampMillis)),
-                    style = AppWidgetTheme.textStyles.d1
-                )
-
-//                    Button(
-//                        "Refresh All",
-//                        actionRunCallback<RefreshAllAction>()
-//                    )
-//                }
+                Column {
+                    Spacer(modifier = GlanceModifier.height(8.dp))
+                    Text(
+                        text = "Updated: " + SimpleDateFormat("HH:mm:ss, dd-MM-yyyy", Locale.US).format(Date(state.updateTimestampMillis)),
+                        style = AppWidgetTheme.textStyles.micro
+                    )
+                }
             }
         }
     }
 
     @Composable
-    fun Item(item: MarketWidgetItem) {
+    private fun Item(item: MarketWidgetItem) {
         Row(
             modifier = GlanceModifier
                 .fillMaxHeight()
@@ -161,22 +158,27 @@ class MarketWidget : GlanceAppWidget() {
             )
             Spacer(modifier = GlanceModifier.width(16.dp))
             Column {
-                MarketCoinFirstRow(coinName = item.title, rate = item.value)
+                ItemFirstRow(coinName = item.title, rate = item.value)
                 Spacer(modifier = GlanceModifier.height(3.dp))
-                MarketCoinSecondRow(
+                ItemSecondRow(
                     subtitle = item.subtitle,
                     label = item.label,
                     diff = item.diff,
                     marketCap = item.marketCap,
                     volume = item.volume
                 )
-
             }
         }
     }
 
+    private fun imageProvider(path: String?) = if (path == null) {
+        ImageProvider(R.drawable.coin_placeholder)
+    } else {
+        ImageProvider(BitmapFactory.decodeFile(path))
+    }
+
     @Composable
-    fun MarketCoinFirstRow(coinName: String, rate: String?) {
+    private fun ItemFirstRow(coinName: String, rate: String?) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = CenterVertically
@@ -197,7 +199,7 @@ class MarketWidget : GlanceAppWidget() {
     }
 
     @Composable
-    fun MarketCoinSecondRow(
+    private fun ItemSecondRow(
         subtitle: String,
         label: String?,
         diff: BigDecimal?,
@@ -231,7 +233,7 @@ class MarketWidget : GlanceAppWidget() {
         }
 
     @Composable
-    fun MarketDataValueComponent(
+    private fun MarketDataValueComponent(
         diff: BigDecimal?,
         marketCap: String?,
         volume: String?
@@ -279,7 +281,7 @@ class MarketWidget : GlanceAppWidget() {
     }
 
     @Composable
-    fun Badge(text: String) {
+    private fun Badge(text: String) {
         Text(
             modifier = GlanceModifier
                 .background(ImageProvider(R.drawable.widget_list_item_badge_background))
@@ -289,10 +291,32 @@ class MarketWidget : GlanceAppWidget() {
         )
     }
 
-    private fun imageProvider(path: String?) = if (path == null) {
-        ImageProvider(R.drawable.coin_placeholder)
-    } else {
-        ImageProvider(BitmapFactory.decodeFile(path))
+    @Composable
+    private fun FullScreenMessage(icon: Int, text: String) {
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = GlanceModifier
+                    .size(100.dp)
+                    .background(ImageProvider(R.drawable.widget_screen_message_icon_background)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    modifier = GlanceModifier.size(48.dp),
+                    provider = ImageProvider(icon),
+                    contentDescription = null,
+                )
+            }
+            Spacer(modifier = GlanceModifier.height(32.dp))
+            Text(
+                text = text,
+                style = AppWidgetTheme.textStyles.d1
+            )
+            Spacer(modifier = GlanceModifier.height(32.dp))
+        }
     }
 
 }

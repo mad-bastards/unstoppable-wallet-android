@@ -34,6 +34,10 @@ class TextStyles {
     val d3: TextStyle
         @Composable
         get() = TextStyle(color = AppWidgetTheme.colors.jacob, fontSize = 14.sp, fontWeight = FontWeight.Normal)
+
+    val micro: TextStyle
+        @Composable
+        get() = TextStyle(color = AppWidgetTheme.colors.grey, fontSize = 10.sp, fontWeight = FontWeight.Normal)
 }
 
 @Composable
